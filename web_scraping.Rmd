@@ -2,16 +2,17 @@
 title: "web_scraping"
 author: "Tanya Bonilla"
 date: "10/24/2019"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
-The library **rvest** will read in a website and then convert it/read it into html with *read_html* function.
+The library **rvest** will read in a website and then convert it/read it into html with *read_html* function. We dentify the nodes that contain the class number, section number, course title, instructor, and enrollment, and store them in their own variables.
 ```{r}
-library(rvest)
-library(tidyr)
-library(tidyverse)
+suppressMessages(library(rvest))
+suppressMessages(library(tidyr))
+suppressMessages(library(tidyverse))
 
-#head > title
 
 sched_url <- "http://ems.csuchico.edu/APSS/schedule/spr2019/CSCI.shtml"
 sched_html <- read_html(sched_url)
@@ -49,6 +50,10 @@ enrollment <- schedule %>%
               html_nodes("td.enrtot") %>%
               html_text %>%
               as.integer()
+```
+
+We then take the variables and store the data in a tibble.
+```{r}
 new_sched <- tibble( title = title,
                       units = units,
                       subject = subject,
@@ -56,8 +61,10 @@ new_sched <- tibble( title = title,
                       sect = sect,
                       instructor = instructor,
                       enrollment = enrollment)
-new_sched <- apply(new_sched, 2, function(x) gsub("^$|^ $", NA, x))
+```
 
+Here, we create a function that replicates the previous actions, so that we can easily repeat them with other schedules.
+```{r}
 read_class_schedule <- function(url) {
   website_html<- read_html(url)
   schedule <- website_html %>%
@@ -102,11 +109,15 @@ read_class_schedule <- function(url) {
                       instructor = instructor,
                       enrollment = enrollment)
 }
+```
 
+This code chuck calls the function for each of the schedules, and combines them all into a single tibble named **csci_math_table**.
+```{r, message=FALSE, warning=FALSE}
 cscispring_2019 <- read_class_schedule("http://ems.csuchico.edu/APSS/schedule/spr2019/CSCI.shtml")
 cscispring_2020 <- read_class_schedule("http://ems.csuchico.edu/APSS/schedule/spr2020/CSCI.shtml")
 mathspring_2019 <- read_class_schedule("http://ems.csuchico.edu/APSS/schedule/spr2020/CSCI.shtml")
 mathspring_2020 <- read_class_schedule("http://ems.csuchico.edu/APSS/schedule/spr2020/CSCI.shtml")
 
-csci_math <- rbind(cscispring_2019, cscispring_2020, mathspring_2019, mathspring_2020)
+csci_math_table <- rbind(cscispring_2019, cscispring_2020, mathspring_2019, mathspring_2020)
+csci_math_table
 ```
