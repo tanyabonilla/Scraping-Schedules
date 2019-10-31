@@ -1,0 +1,112 @@
+---
+title: "web_scraping"
+author: "Tanya Bonilla"
+date: "10/24/2019"
+output: html_document
+---
+
+The library **rvest** will read in a website and then convert it/read it into html with *read_html* function.
+```{r}
+library(rvest)
+library(tidyr)
+library(tidyverse)
+
+#head > title
+
+sched_url <- "http://ems.csuchico.edu/APSS/schedule/spr2019/CSCI.shtml"
+sched_html <- read_html(sched_url)
+
+schedule <- sched_html %>%
+             html_nodes(".classrow")
+
+title <- schedule %>%
+          html_nodes("td.title") %>%
+          html_text()
+
+units <- schedule %>%
+          html_nodes("td.units") %>%
+          html_text() %>%
+          as.integer()
+
+subject <- schedule %>%
+            html_nodes("td.subj") %>%
+            html_text()
+class_num <- schedule %>%
+            html_nodes("td.cat_num") %>%
+            html_text() %>%
+            as.integer()
+
+sect <- schedule %>%
+        html_nodes("td.sect") %>%
+        html_text() %>%
+        as.integer()
+
+instructor <- schedule %>%
+              html_nodes("td.Instructor") %>%
+              html_text()
+
+enrollment <- schedule %>%
+              html_nodes("td.enrtot") %>%
+              html_text %>%
+              as.integer()
+new_sched <- tibble( title = title,
+                      units = units,
+                      subject = subject,
+                      class_num = class_num,
+                      sect = sect,
+                      instructor = instructor,
+                      enrollment = enrollment)
+new_sched <- apply(new_sched, 2, function(x) gsub("^$|^ $", NA, x))
+
+read_class_schedule <- function(url) {
+  website_html<- read_html(url)
+  schedule <- website_html %>%
+            html_nodes(".classrow")
+
+  title <- schedule %>% 
+            html_nodes("td.title") %>%
+            html_text()
+  
+  units <- schedule %>% 
+            html_nodes("td.units") %>%
+            html_text() %>%
+            as.integer()
+  
+  subject <- schedule %>%
+              html_nodes("td.subj") %>%
+              html_text() 
+  class_num <- schedule %>%
+              html_nodes("td.cat_num") %>%
+              html_text() %>%
+              as.integer() 
+  
+  sect <- schedule %>%
+          html_nodes("td.sect") %>%
+          html_text() %>%
+          as.integer()
+  
+  instructor <- schedule %>%
+                html_nodes("td.Instructor") %>%
+                html_text()
+  
+  enrollment <- schedule %>%
+                html_nodes("td.enrtot") %>%
+                html_text %>%
+                as.integer()
+  
+   tibble(title = title,
+                      units = units,
+                      subject = subject,
+                      class_num = class_num,
+                      sect = sect,
+                      instructor = instructor,
+                      enrollment = enrollment)
+}
+
+cscispring_2019 <- read_class_schedule("http://ems.csuchico.edu/APSS/schedule/spr2019/CSCI.shtml")
+cscispring_2020 <- read_class_schedule("http://ems.csuchico.edu/APSS/schedule/spr2020/CSCI.shtml")
+mathspring_2019 <- read_class_schedule("http://ems.csuchico.edu/APSS/schedule/spr2020/CSCI.shtml")
+mathspring_2020 <- read_class_schedule("http://ems.csuchico.edu/APSS/schedule/spr2020/CSCI.shtml")
+
+csci_math <- rbind(cscispring_2019, cscispring_2020, mathspring_2019, mathspring_2020)
+```
